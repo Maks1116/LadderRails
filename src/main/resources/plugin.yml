@@ -1,0 +1,4 @@
+name: LadderRails
+version: '${project.version}'
+main: pl.pixel.ladderrails.Main
+author: Pixel
