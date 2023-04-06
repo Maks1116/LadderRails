@@ -37,11 +37,7 @@ public class Listeners implements Listener {
                 goingUp = velocity.getY() > 0;
             }
 
-            if (goingUp) {
-                minecart.setVelocity(new Vector(0, 0.1, 0));
-            } else {
-                minecart.setVelocity(new Vector(0, -0.1, 0));
-            }
+            step(minecart, goingUp);
 
             if (!toLadder) {
                 move(minecart);
@@ -81,5 +77,14 @@ public class Listeners implements Listener {
         }
 
         minecart.setVelocity(velocity);
+    }
+
+    private void step(Minecart minecart, boolean up) {
+        double speed = Main.instance.getConfig().getDouble("minecart-ladder-speed", 0.2);
+        if (up) {
+            minecart.setVelocity(new Vector(0, speed, 0));
+        } else {
+            minecart.setVelocity(new Vector(0, -speed, 0));
+        }
     }
 }
