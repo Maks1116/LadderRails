@@ -42,6 +42,9 @@ public class Listeners implements Listener {
             if (!toLadder) {
                 move(minecart);
                 minecart.setFallDistance(0);
+                if (minecart.getPassenger() != null) {
+                    minecart.getPassenger().setFallDistance(0);
+                }
 
                 return;
             }
