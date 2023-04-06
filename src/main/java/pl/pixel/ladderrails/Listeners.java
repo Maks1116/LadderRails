@@ -1,7 +1,10 @@
 package pl.pixel.ladderrails;
 
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Minecart;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -40,7 +43,7 @@ public class Listeners implements Listener {
             step(minecart, goingUp);
 
             if (!toLadder) {
-                move(minecart);
+                move(minecart, goingUp);
                 minecart.setFallDistance(0);
                 if (minecart.getPassenger() != null) {
                     minecart.getPassenger().setFallDistance(0);
@@ -52,34 +55,58 @@ public class Listeners implements Listener {
             if (!goingUp) {
                 Block bellow = to.getRelative(0, -1, 0);
                 if (bellow.getType() != Material.AIR && bellow.getType() != Material.LADDER) {
-                    move(minecart);
+                    move(minecart, false);
                 }
             }
         }
     }
 
-    private void move(Minecart minecart) {
-        float yaw = minecart.getLocation().getYaw();
-        yaw = (yaw + 360) % 360;
-        int direction = Math.round(yaw / 90) % 4;
-        Vector velocity = minecart.getVelocity();
+    private void move(Minecart minecart, boolean up) {
+        //search for rails arround minecart on x and z axis
+        Block block = minecart.getLocation().getBlock();
+        Block rails = null;
 
-        switch (direction) {
-            case 0:
-                velocity.setX(0.5);
-                break;
-            case 1:
-                velocity.setZ(-0.5);
-                break;
-            case 2:
-                velocity.setX(-0.5);
-                break;
-            case 3:
-                velocity.setZ(0.5);
-                break;
+        for (int x = -1; x <= 1; x++) {
+            for (int z = -1; z <= 1; z++) {
+                if (x == 0 && z == 0) continue;
+                Block b = block.getRelative(x, 0, z);
+                if (b.getType() == Material.RAILS || b.getType() == Material.POWERED_RAIL || b.getType() == Material.DETECTOR_RAIL) {
+                    rails = b;
+                    break;
+                }
+
+                if (up) {
+                    b = block.getRelative(x, 1, z);
+                    if (b.getType() == Material.RAILS || b.getType() == Material.POWERED_RAIL || b.getType() == Material.DETECTOR_RAIL) {
+                        rails = b;
+                        break;
+                    }
+                }
+            }
         }
 
-        minecart.setVelocity(velocity);
+        if (rails != null) {
+            if (minecart.getPassenger() != null) {
+                Entity passenger = minecart.getPassenger();
+
+                float pitch = passenger.getLocation().getPitch();
+                float yaw = passenger.getLocation().getYaw();
+
+
+                minecart.remove();
+                Minecart newMinecart = (Minecart) passenger.getWorld().spawnEntity(rails.getLocation().add(0.5, 0.5, 0.5), EntityType.MINECART);
+
+                newMinecart.setVelocity(minecart.getVelocity());
+                Location loc = newMinecart.getLocation();
+                loc.setPitch(pitch);
+                loc.setYaw(yaw);
+                passenger.teleport(loc);
+                newMinecart.setPassenger(passenger);
+
+                return;
+            }
+            minecart.teleport(rails.getLocation().add(0.5, 0.5, 0.5));
+        }
     }
 
     private void step(Minecart minecart, boolean up) {
