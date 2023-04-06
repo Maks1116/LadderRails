@@ -45,6 +45,8 @@ public class Listeners implements Listener {
 
             if (!toLadder) {
                 move(minecart);
+                minecart.setFallDistance(0);
+
                 return;
             }
 
