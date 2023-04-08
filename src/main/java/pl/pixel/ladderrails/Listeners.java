@@ -7,11 +7,20 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Minecart;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.vehicle.VehicleExitEvent;
 import org.bukkit.event.vehicle.VehicleMoveEvent;
 import org.bukkit.util.Vector;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
 public class Listeners implements Listener {
+    private List<UUID> invincibleEntities = new ArrayList<>();
+
     @EventHandler
     public void onVehicleMove(VehicleMoveEvent event) {
         if (event.getVehicle() instanceof Minecart) {
@@ -34,6 +43,10 @@ public class Listeners implements Listener {
                     minecart.setVelocity(new Vector(0, -0.2, 0));
                 }
 
+                if (minecart.getPassenger() != null) {
+                    invincibleEntities.add(minecart.getPassenger().getUniqueId());
+                }
+
                 return;
             } else {
                 Vector velocity = minecart.getVelocity();
@@ -49,6 +62,10 @@ public class Listeners implements Listener {
                     minecart.getPassenger().setFallDistance(0);
                 }
 
+                if (minecart.getPassenger() != null) {
+                    invincibleEntities.remove(minecart.getPassenger().getUniqueId());
+                }
+
                 return;
             }
 
@@ -57,6 +74,26 @@ public class Listeners implements Listener {
                 if (bellow.getType() != Material.AIR && bellow.getType() != Material.LADDER) {
                     move(minecart, false);
                 }
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onEntityDamage(EntityDamageEvent event) {
+        if (event.getCause() == EntityDamageEvent.DamageCause.FALL) {
+            if (invincibleEntities.contains(event.getEntity().getUniqueId())) {
+                event.setCancelled(true);
+                event.getEntity().setFallDistance(0);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onVehicleExit(VehicleExitEvent event) {
+        if (event.getVehicle() instanceof Minecart) {
+            Minecart minecart = (Minecart) event.getVehicle();
+            if (minecart.getPassenger() != null) {
+                invincibleEntities.remove(minecart.getPassenger().getUniqueId());
             }
         }
     }
