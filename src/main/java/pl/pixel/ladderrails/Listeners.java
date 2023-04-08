@@ -143,6 +143,9 @@ public class Listeners implements Listener {
                 return;
             }
             minecart.teleport(rails.getLocation().add(0.5, 0.5, 0.5));
+
+            Vector direction = rails.getLocation().toVector().subtract(block.getLocation().toVector());
+            minecart.setVelocity(direction);
         }
     }
 
